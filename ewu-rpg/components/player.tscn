@@ -5,4 +5,4 @@
 
 [node name="Player" instance=ExtResource("1_0g4kb")]
 script = ExtResource("2_uapwn")
-health = 100
+health = 0

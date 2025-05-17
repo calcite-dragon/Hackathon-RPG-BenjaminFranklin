@@ -1,7 +1,10 @@
 extends GridMovement
 @onready var healthbar = $"../CharacterSprite/Camera2D/Control/HealthBar"
 
-@export var health: int = 100
+@export var health: int
+
+func _ready() -> void:
+	health = 100
 
 func _process(delta: float) -> void:
 	
@@ -25,3 +28,5 @@ func take_damage(amount: int) -> void:
 func heal(amount: int) -> void:
 	if(health+amount <= 100):
 		health += amount
+	if(health+amount > 100):
+		health = 100

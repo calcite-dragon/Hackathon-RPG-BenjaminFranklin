@@ -12,18 +12,21 @@ func _process(delta: float) -> void:
 	if(type == cont_type.Item1):
 		if(self.get_parent().selected_container == 0):
 			frame = 0
+			handle_input()
 		else:
 			frame = 1
 	
 	if(type == cont_type.Item2):
 		if(self.get_parent().selected_container == 1):
 			frame = 0
+			handle_input()
 		else:
 			frame = 1
 	
 	if(type == cont_type.Item3):
 		if(self.get_parent().selected_container == 2):
 			frame = 0
+			handle_input()
 		else:
 			frame = 1
 	
@@ -37,3 +40,10 @@ func _process(delta: float) -> void:
 	
 	if(type == cont_type.Weapon):
 		pass
+
+func handle_input() -> void:
+	if(Input.is_action_just_pressed("use")):
+		if(item == items.Potion):
+			if($"../../../../Player".health != 100):
+				$"../../../../Player".heal(34)
+				item = items.Empty

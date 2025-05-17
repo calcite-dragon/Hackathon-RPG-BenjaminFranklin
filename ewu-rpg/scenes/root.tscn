@@ -50,7 +50,6 @@ tile_map_data = PackedByteArray("AAD5//v/AAAAAAAAAAD5//z/AAAAAAAAAAD5//3/AAABAAA
 tile_set = SubResource("TileSet_twpsu")
 
 [node name="Player" parent="." instance=ExtResource("2_twpsu")]
-health = 100
 
 [node name="CharacterSprite" parent="." instance=ExtResource("3_lrqlo")]
 script = SubResource("GDScript_jh1ax")
