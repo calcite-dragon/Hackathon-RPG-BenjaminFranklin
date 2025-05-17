@@ -5,3 +5,5 @@ func _init():
 	item_description = "Player's Fist"
 	
 	attack_damage = 2
+	
+	sprite = Vector2i(0, 0)

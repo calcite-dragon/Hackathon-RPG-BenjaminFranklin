@@ -8,3 +8,6 @@ var item_description: String
 var health: int
 var attack_damage: int
 var defense: int
+
+# visuals
+var sprite: Vector2i

@@ -1,10 +1,11 @@
-[gd_scene load_steps=9 format=4 uid="uid://df34bt27jl1yf"]
+[gd_scene load_steps=10 format=4 uid="uid://df34bt27jl1yf"]
 
 [ext_resource type="Texture2D" uid="uid://ctcyk2n5fgme6" path="res://visual/main_tiles.png" id="1_j5px3"]
 [ext_resource type="PackedScene" uid="uid://qr6lsgl7s4ex" path="res://components/player.tscn" id="2_twpsu"]
 [ext_resource type="PackedScene" uid="uid://dtstcgqodrw8o" path="res://components/character_sprite.tscn" id="3_lrqlo"]
-[ext_resource type="Script" uid="uid://dok5q3wh2ooah" path="res://scripts/items/inventory.gd" id="4_jh1ax"]
-[ext_resource type="PackedScene" uid="uid://dv4wukh3afbrw" path="res://components/container.tscn" id="4_sqa0i"]
+[ext_resource type="Script" path="res://scripts/items/inventory.gd" id="4_jh1ax"]
+[ext_resource type="PackedScene" path="res://components/container.tscn" id="4_sqa0i"]
+[ext_resource type="Script" uid="uid://t7k1nlew15od" path="res://scripts/terrain/InfiniteTerrain.gd" id="5_jh1ax"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_j5px3"]
 texture = ExtResource("1_j5px3")
@@ -13,7 +14,12 @@ texture_region_size = Vector2i(8, 8)
 1:0/0 = 0
 1:0/0/custom_data_0 = true
 0:1/0 = 0
-0:1/0/custom_data_0 = true
+1:1/0 = 0
+1:1/0/custom_data_0 = true
+2:1/0 = 0
+2:1/0/custom_data_0 = true
+2:0/0 = 0
+2:0/0/custom_data_0 = true
 
 [sub_resource type="TileSet" id="TileSet_twpsu"]
 tile_size = Vector2i(8, 8)
@@ -69,15 +75,19 @@ type = 1
 
 [node name="Item1" parent="CharacterSprite/Camera2D/Control" instance=ExtResource("4_sqa0i")]
 position = Vector2(61, 74)
-item = 0
 type = 2
 
 [node name="Item2" parent="CharacterSprite/Camera2D/Control" instance=ExtResource("4_sqa0i")]
 position = Vector2(72, 74)
-item = 0
+item = 6
 type = 3
 
 [node name="Item3" parent="CharacterSprite/Camera2D/Control" instance=ExtResource("4_sqa0i")]
 position = Vector2(83, 74)
-item = 0
+item = 7
 type = 4
+
+[node name="TerrainGenerator" type="Node2D" parent="."]
+script = ExtResource("5_jh1ax")
+player_node_path = NodePath("../Player")
+poisson_radius = 1.5
