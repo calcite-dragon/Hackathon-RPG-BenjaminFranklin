@@ -10,10 +10,11 @@ enum direction {N, S, E, W}
 var is_walking: bool = false
 
 func _process(delta: float) -> void:
-	
+	set_pos()
+
+func set_pos() -> void:
 	if (position.x != world_position.x or position.y != world_position.y):
 		position = get_real_pos(world_position) as Vector2
-
 
 func get_world_pos(pos: Vector2i) -> Vector2i:
 	var ret_pos: Vector2i

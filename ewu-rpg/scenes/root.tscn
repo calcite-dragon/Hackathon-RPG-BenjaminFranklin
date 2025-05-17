@@ -1,7 +1,9 @@
-[gd_scene load_steps=5 format=4 uid="uid://df34bt27jl1yf"]
+[gd_scene load_steps=7 format=4 uid="uid://df34bt27jl1yf"]
 
 [ext_resource type="Texture2D" uid="uid://ctcyk2n5fgme6" path="res://visual/main_tiles.png" id="1_j5px3"]
 [ext_resource type="PackedScene" uid="uid://qr6lsgl7s4ex" path="res://components/player.tscn" id="2_twpsu"]
+[ext_resource type="PackedScene" uid="uid://dtstcgqodrw8o" path="res://components/character_sprite.tscn" id="3_lrqlo"]
+[ext_resource type="Script" uid="uid://dy56eh6ucmq1x" path="res://components/follow.gd" id="4_sqa0i"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_j5px3"]
 texture = ExtResource("1_j5px3")
@@ -29,6 +31,9 @@ tile_set = SubResource("TileSet_twpsu")
 
 [node name="Player" parent="." instance=ExtResource("2_twpsu")]
 
-[node name="Camera2D" type="Camera2D" parent="Player"]
+[node name="CharacterSprite" parent="." instance=ExtResource("3_lrqlo")]
+script = ExtResource("4_sqa0i")
+
+[node name="Camera2D" type="Camera2D" parent="CharacterSprite"]
 zoom = Vector2(6, 6)
 position_smoothing_enabled = true

@@ -11,5 +11,4 @@ func _process(delta: float) -> void:
 	elif(Input.is_action_just_pressed("move_W")):
 		move(direction.W)
 	
-	if (position.x != world_position.x or position.y != world_position.y):
-		position = get_real_pos(world_position) as Vector2
+	set_pos()
