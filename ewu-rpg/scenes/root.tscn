@@ -4,7 +4,7 @@
 [ext_resource type="PackedScene" uid="uid://qr6lsgl7s4ex" path="res://components/player.tscn" id="2_twpsu"]
 [ext_resource type="PackedScene" uid="uid://dtstcgqodrw8o" path="res://components/character_sprite.tscn" id="3_lrqlo"]
 [ext_resource type="Script" uid="uid://dok5q3wh2ooah" path="res://scripts/items/inventory.gd" id="4_jh1ax"]
-[ext_resource type="PackedScene" path="res://components/container.tscn" id="4_sqa0i"]
+[ext_resource type="PackedScene" uid="uid://dv4wukh3afbrw" path="res://components/container.tscn" id="4_sqa0i"]
 [ext_resource type="Script" uid="uid://t7k1nlew15od" path="res://scripts/terrain/InfiniteTerrain.gd" id="5_jh1ax"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_j5px3"]
