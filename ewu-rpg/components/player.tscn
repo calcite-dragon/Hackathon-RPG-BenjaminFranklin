@@ -1,0 +1,10 @@
+[gd_scene load_steps=4 format=3 uid="uid://qr6lsgl7s4ex"]
+
+[ext_resource type="PackedScene" uid="uid://dgi51fdk433t5" path="res://components/grid_movement.tscn" id="1_0g4kb"]
+[ext_resource type="PackedScene" uid="uid://dtstcgqodrw8o" path="res://components/character_sprite.tscn" id="2_51jd6"]
+[ext_resource type="Script" uid="uid://b26fir2aem658" path="res://scripts/entity/player_controller.gd" id="2_uapwn"]
+
+[node name="Player" instance=ExtResource("1_0g4kb")]
+script = ExtResource("2_uapwn")
+
+[node name="CharacterSprite" parent="." index="0" instance=ExtResource("2_51jd6")]

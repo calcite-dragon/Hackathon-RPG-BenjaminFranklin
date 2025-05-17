@@ -1,17 +1,19 @@
+class_name GridMovement
 extends Node2D
 
 @export var world_position: Vector2i
+@export var speed: float = 4
 
 @onready var tile_map_layer: TileMapLayer = $"../Environment/TileMapLayer"
 
 enum direction {N, S, E, W}
+var is_walking: bool = false
 
 func _process(delta: float) -> void:
 	
-	world_position = get_world_pos(position)
-	
-	if (Input.is_action_just_pressed("Test")):
-		move(direction.S)
+	if (position.x != world_position.x or position.y != world_position.y):
+		position = get_real_pos(world_position) as Vector2
+
 
 func get_world_pos(pos: Vector2i) -> Vector2i:
 	var ret_pos: Vector2i
@@ -45,15 +47,12 @@ func move(dir: direction):
 	elif(dir == direction.E):
 		offset = Vector2(1, 0)
 	elif(dir == direction.W):
-		offset = Vector2(-1, 1)
+		offset = Vector2(-1, 0)
 	
 	var tile_position: Vector2i = world_position + offset
 	
-	print(tile_position)
-	
 	var new_tile:= get_tile(tile_position)
-	
-	print(new_tile.get_custom_data("obstacle"))
+	print(tile_position, "pos", new_tile)
 	
 	if(new_tile.get_custom_data("obstacle") == false):
-		position = lerp(position, get_real_pos(tile_position) as Vector2, 1)
+		world_position = tile_position

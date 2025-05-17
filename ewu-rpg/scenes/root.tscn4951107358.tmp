@@ -28,6 +28,8 @@ tile_map_data = PackedByteArray("AAD//wAAAAAAAAAAAAAAAP//AAAAAAAAAAD/////AAAAAAA
 tile_set = SubResource("TileSet_twpsu")
 
 [node name="Player" parent="." instance=ExtResource("2_twpsu")]
+world_position = null
+speed = null
 
 [node name="Camera2D" type="Camera2D" parent="Player"]
 zoom = Vector2(6, 6)
