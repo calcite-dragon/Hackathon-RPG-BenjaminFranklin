@@ -1,9 +1,10 @@
-[gd_scene load_steps=7 format=4 uid="uid://df34bt27jl1yf"]
+[gd_scene load_steps=9 format=4 uid="uid://df34bt27jl1yf"]
 
 [ext_resource type="Texture2D" uid="uid://ctcyk2n5fgme6" path="res://visual/main_tiles.png" id="1_j5px3"]
 [ext_resource type="PackedScene" uid="uid://qr6lsgl7s4ex" path="res://components/player.tscn" id="2_twpsu"]
 [ext_resource type="PackedScene" uid="uid://dtstcgqodrw8o" path="res://components/character_sprite.tscn" id="3_lrqlo"]
-[ext_resource type="Script" uid="uid://dy56eh6ucmq1x" path="res://components/follow.gd" id="4_sqa0i"]
+[ext_resource type="Script" uid="uid://dok5q3wh2ooah" path="res://scripts/items/inventory.gd" id="4_jh1ax"]
+[ext_resource type="PackedScene" uid="uid://dv4wukh3afbrw" path="res://components/container.tscn" id="4_sqa0i"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_j5px3"]
 texture = ExtResource("1_j5px3")
@@ -20,6 +21,17 @@ custom_data_layer_0/name = "obstacle"
 custom_data_layer_0/type = 1
 sources/0 = SubResource("TileSetAtlasSource_j5px3")
 
+[sub_resource type="GDScript" id="GDScript_jh1ax"]
+script/source = "extends Sprite2D
+
+const FOLLOW_SPEED = 10.0
+
+func _physics_process(delta):
+	var follow_pos = $\"../Player\".position
+
+	position = position.lerp(follow_pos, delta * FOLLOW_SPEED)
+"
+
 [node name="Root" type="Node2D"]
 
 [node name="Environment" type="Node2D" parent="."]
@@ -32,8 +44,40 @@ tile_set = SubResource("TileSet_twpsu")
 [node name="Player" parent="." instance=ExtResource("2_twpsu")]
 
 [node name="CharacterSprite" parent="." instance=ExtResource("3_lrqlo")]
-script = ExtResource("4_sqa0i")
+script = SubResource("GDScript_jh1ax")
 
 [node name="Camera2D" type="Camera2D" parent="CharacterSprite"]
-zoom = Vector2(6, 6)
-position_smoothing_enabled = true
+zoom = Vector2(8, 8)
+
+[node name="Control" type="Control" parent="CharacterSprite/Camera2D"]
+layout_mode = 3
+anchors_preset = 0
+offset_left = -72.0
+offset_top = -40.0
+offset_right = 72.0
+offset_bottom = 40.0
+script = ExtResource("4_jh1ax")
+
+[node name="Armor" parent="CharacterSprite/Camera2D/Control" instance=ExtResource("4_sqa0i")]
+position = Vector2(7, 74)
+item = 0
+
+[node name="Weapon" parent="CharacterSprite/Camera2D/Control" instance=ExtResource("4_sqa0i")]
+position = Vector2(7, 62)
+item = 0
+type = 1
+
+[node name="Item1" parent="CharacterSprite/Camera2D/Control" instance=ExtResource("4_sqa0i")]
+position = Vector2(61, 74)
+item = 0
+type = 2
+
+[node name="Item2" parent="CharacterSprite/Camera2D/Control" instance=ExtResource("4_sqa0i")]
+position = Vector2(72, 74)
+item = 0
+type = 3
+
+[node name="Item3" parent="CharacterSprite/Camera2D/Control" instance=ExtResource("4_sqa0i")]
+position = Vector2(83, 74)
+item = 0
+type = 4

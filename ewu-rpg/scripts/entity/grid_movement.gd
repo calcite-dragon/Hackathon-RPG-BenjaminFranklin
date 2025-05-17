@@ -53,7 +53,6 @@ func move(dir: direction):
 	var tile_position: Vector2i = world_position + offset
 	
 	var new_tile:= get_tile(tile_position)
-	print(tile_position, "pos", new_tile)
 	
 	if(new_tile.get_custom_data("obstacle") == false):
 		world_position = tile_position
