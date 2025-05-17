@@ -3,7 +3,7 @@
 [ext_resource type="Texture2D" uid="uid://ctcyk2n5fgme6" path="res://visual/main_tiles.png" id="1_j5px3"]
 [ext_resource type="PackedScene" uid="uid://qr6lsgl7s4ex" path="res://components/player.tscn" id="2_twpsu"]
 [ext_resource type="PackedScene" uid="uid://dtstcgqodrw8o" path="res://components/character_sprite.tscn" id="3_lrqlo"]
-[ext_resource type="Script" path="res://scripts/items/inventory.gd" id="4_jh1ax"]
+[ext_resource type="Script" uid="uid://dok5q3wh2ooah" path="res://scripts/items/inventory.gd" id="4_jh1ax"]
 [ext_resource type="PackedScene" path="res://components/container.tscn" id="4_sqa0i"]
 [ext_resource type="Script" uid="uid://t7k1nlew15od" path="res://scripts/terrain/InfiniteTerrain.gd" id="5_jh1ax"]
 
@@ -89,5 +89,7 @@ type = 4
 
 [node name="TerrainGenerator" type="Node2D" parent="."]
 script = ExtResource("5_jh1ax")
+chunk_size = 16
+view_distance = 5
 player_node_path = NodePath("../Player")
 poisson_radius = 1.5

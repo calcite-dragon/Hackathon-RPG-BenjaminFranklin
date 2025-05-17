@@ -7,6 +7,7 @@ extends Node2D
 @export var chunk_size: int = 32  # Size in tiles
 @export var view_distance: int = 3  # Number of chunks in each direction
 @export var player_node_path: NodePath
+@export var max_chunks_per_frame: int = 1  # Maximum chunks to generate in a single frame
 
 @export_category("Noise Settings")
 @export var height_noise_scale: float = 0.05
@@ -34,6 +35,10 @@ var _player: Node2D
 var _current_player_chunk: Vector2i
 var _thread: Thread
 var _exit_thread: bool = false
+var _chunk_queue = []  # Queue of chunks to be generated
+var _chunks_to_remove = []  # Queue of chunks to be removed
+var _is_generating: bool = false
+var _mutex: Mutex
 
 # Tile atlas coordinates based on user's tileset
 var GRASS_TILE = Vector2i(0, 0)
@@ -50,13 +55,17 @@ func _ready():
 	# Setup noise generators
 	_setup_noise()
 	
-	# Start thread for chunk management
+	# Initialize mutex for thread safety
+	_mutex = Mutex.new()
+	
+	# Start background thread for position tracking
 	_thread = Thread.new()
 	_thread.start(_thread_function)
 
 func _exit_tree():
 	_exit_thread = true
-	_thread.wait_to_finish()
+	if _thread:
+		_thread.wait_to_finish()
 
 func _setup_noise():
 	# Height noise
@@ -73,6 +82,7 @@ func _setup_noise():
 	_temp_noise.frequency = temp_noise_scale
 	_temp_noise.fractal_octaves = temp_noise_octaves
 
+# Thread for monitoring player position and queueing chunks
 func _thread_function():
 	while not _exit_thread:
 		if _player != null:
@@ -84,33 +94,76 @@ func _thread_function():
 			
 			if current_chunk != _current_player_chunk:
 				_current_player_chunk = current_chunk
-				call_deferred("_update_chunks", current_chunk)
+				_update_chunk_queues(current_chunk)
 		
-		OS.delay_msec(500)  # Check every half second
+		# Sleep to avoid hogging CPU
+		OS.delay_msec(500)
 
-func _update_chunks(center_chunk: Vector2i):
-	var chunks_to_remove = []
-	var chunks_to_keep = []
+# Update the queues of chunks to generate and remove
+func _update_chunk_queues(center_chunk: Vector2i):
+	_mutex.lock()
 	
-	# Determine which chunks to keep/load
+	# Clear existing queues
+	_chunk_queue.clear()
+	_chunks_to_remove.clear()
+	
+	# Calculate which chunks should be visible
+	var visible_chunks = []
 	for x in range(center_chunk.x - view_distance, center_chunk.x + view_distance + 1):
 		for y in range(center_chunk.y - view_distance, center_chunk.y + view_distance + 1):
-			var chunk_pos = Vector2i(x, y)
-			chunks_to_keep.append(chunk_pos)
-			
-			if not _loaded_chunks.has(chunk_pos):
-				call_deferred("_generate_chunk", chunk_pos)
+			visible_chunks.append(Vector2i(x, y))
 	
-	# Find chunks to remove
+	# Queue chunks to generate (prioritize chunks closer to player)
+	for chunk_pos in visible_chunks:
+		if not _loaded_chunks.has(chunk_pos):
+			# Calculate priority (distance from player)
+			var dist = abs(chunk_pos.x - center_chunk.x) + abs(chunk_pos.y - center_chunk.y)
+			_chunk_queue.append({"pos": chunk_pos, "priority": dist})
+	
+	# Sort by priority (closer chunks first)
+	_chunk_queue.sort_custom(func(a, b): return a.priority < b.priority)
+	
+	# Queue chunks to remove
 	for chunk_pos in _loaded_chunks.keys():
-		if not chunks_to_keep.has(chunk_pos):
-			chunks_to_remove.append(chunk_pos)
+		if not visible_chunks.has(chunk_pos):
+			_chunks_to_remove.append(chunk_pos)
 	
-	# Remove out-of-range chunks
-	for chunk_pos in chunks_to_remove:
-		call_deferred("_remove_chunk", chunk_pos)
+	_mutex.unlock()
 
+# Process chunk generation/removal on the main thread but limit per frame
+func _process(_delta):
+	# Process chunk removal first (frees up resources)
+	_mutex.lock()
+	var chunks_to_remove = _chunks_to_remove.duplicate()
+	_chunks_to_remove.clear()
+	_mutex.unlock()
+	
+	for chunk_pos in chunks_to_remove:
+		_remove_chunk(chunk_pos)
+	
+	# Process chunk generation
+	var chunks_generated = 0
+	
+	if not _is_generating and _chunk_queue.size() > 0:
+		_mutex.lock()
+		var chunks_to_generate = []
+		
+		# Get up to max_chunks_per_frame from queue
+		while _chunk_queue.size() > 0 and chunks_to_generate.size() < max_chunks_per_frame:
+			chunks_to_generate.append(_chunk_queue.pop_front().pos)
+		
+		_mutex.unlock()
+		
+		# Generate these chunks
+		for chunk_pos in chunks_to_generate:
+			if not _loaded_chunks.has(chunk_pos):
+				_generate_chunk(chunk_pos)
+				chunks_generated += 1
+
+# Generate a single chunk
 func _generate_chunk(chunk_pos: Vector2i):
+	_is_generating = true
+	
 	# Get the tilemap layer
 	var parent_node = get_parent()
 	var tilemap_layer = parent_node.get_node("Environment/TileMapLayer")
@@ -119,18 +172,21 @@ func _generate_chunk(chunk_pos: Vector2i):
 	var chunk_world_x = chunk_pos.x * chunk_size
 	var chunk_world_y = chunk_pos.y * chunk_size
 	
-	# Generate the base terrain first
+	# Pre-calculate all points for decorations using Poisson disk sampling
+	var decoration_points = _generate_poisson_disk_samples(chunk_pos)
+	
+	# Generate the base terrain and decorations
 	for y in range(chunk_size):
 		for x in range(chunk_size):
 			var world_x = chunk_world_x + x
 			var world_y = chunk_world_y + y
+			var tile_pos = Vector2i(world_x, world_y)
 			
-			# Get height and temperature values (using rotated coordinates for more interesting patterns)
+			# Get height and temperature values
 			var height = get_height_at(world_x, world_y)
 			var temperature = get_temperature_at(world_x, world_y)
 			
 			# Determine base tile type based on temperature
-			var tile_pos = Vector2i(world_x, world_y)
 			var atlas_coords: Vector2i
 			
 			if temperature < snow_threshold:
@@ -140,16 +196,9 @@ func _generate_chunk(chunk_pos: Vector2i):
 			
 			# Set base terrain tile
 			tilemap_layer.set_cell(tile_pos, 0, atlas_coords, 0)
-			
-			# No obstacles for base terrain
-			var tile_data = tilemap_layer.get_cell_tile_data(tile_pos)
-			if tile_data:
-				tile_data.set_custom_data("obstacle", false)
 	
-	# Now place decorations using Poisson disk sampling
-	var points = _generate_poisson_disk_samples(chunk_pos)
-	
-	for point in points:
+	# Now place decorations using pre-calculated points
+	for point in decoration_points:
 		var world_x = chunk_world_x + point.x
 		var world_y = chunk_world_y + point.y
 		var tile_pos = Vector2i(world_x, world_y)
@@ -177,7 +226,6 @@ func _generate_chunk(chunk_pos: Vector2i):
 			local_rock_density *= 0.5
 		
 		var tile_type: Vector2i
-		var is_obstacle = true
 		
 		if random_val < local_tree_density:
 			# Place a tree
@@ -197,14 +245,10 @@ func _generate_chunk(chunk_pos: Vector2i):
 		
 		# Set the decoration tile
 		tilemap_layer.set_cell(tile_pos, 0, tile_type, 0)
-		
-		# Set as obstacle
-		var tile_data = tilemap_layer.get_cell_tile_data(tile_pos)
-		if tile_data:
-			tile_data.set_custom_data("obstacle", true)
 	
 	# Mark chunk as loaded
 	_loaded_chunks[chunk_pos] = true
+	_is_generating = false
 
 func _remove_chunk(chunk_pos: Vector2i):
 	if _loaded_chunks.has(chunk_pos):
