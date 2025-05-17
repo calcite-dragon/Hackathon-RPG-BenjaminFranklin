@@ -1,6 +1,11 @@
 extends GridMovement
+@onready var healthbar = $"../CharacterSprite/Camera2D/Control/HealthBar"
+
+@export var health: int = 100
 
 func _process(delta: float) -> void:
+	
+	healthbar.value = health
 	
 	if(Input.is_action_just_pressed("move_N")):
 		move(direction.N)
@@ -12,3 +17,11 @@ func _process(delta: float) -> void:
 		move(direction.W)
 	
 	set_pos()
+
+func take_damage(amount: int) -> void:
+	if(health > 0 && health-amount > 0):
+		health -= amount
+
+func heal(amount: int) -> void:
+	if(health+amount <= 100):
+		health += amount

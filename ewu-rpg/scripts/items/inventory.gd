@@ -4,6 +4,7 @@ extends Control
 
 var armor
 var weapon
+enum items {Empty = 0, WoodSword = 1, IronSword = 2, DiamondSword = 3, Potion = 4, LeatherArmor = 5, IronArmor = 6, DiamondArmor = 7}
 
 func _init() -> void:
 	pass
@@ -21,7 +22,5 @@ func _process(delta: float) -> void:
 			selected_container -= 1
 		else:
 			selected_container = 2
-	
-	get_parent().get_parent()
 	
 	

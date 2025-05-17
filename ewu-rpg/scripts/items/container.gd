@@ -4,7 +4,7 @@ extends Sprite2D
 @export var type: cont_type
 
 enum cont_type {Armor, Weapon, Item1, Item2, Item3}
-enum items {Empty = 0, WoodSword = 1, IronSword = 2, DiamondSword = 3, LeatherArmor = 5, IronArmor = 6, DiamondArmor = 7}
+enum items {Empty = 0, WoodSword = 1, IronSword = 2, DiamondSword = 3, Potion = 4, LeatherArmor = 5, IronArmor = 6, DiamondArmor = 7}
 
 func _process(delta: float) -> void:
 	$Sprite2D.frame = item
@@ -28,7 +28,12 @@ func _process(delta: float) -> void:
 			frame = 1
 	
 	if(type == cont_type.Armor):
-		get_parent().armor = self
+		if(item == items.LeatherArmor):
+			get_parent().get_parent().get_parent().frame = 4
+		elif(item == items.IronArmor):
+			get_parent().get_parent().get_parent().frame = 8
+		elif(item == items.DiamondArmor):
+			get_parent().get_parent().get_parent().frame = 12
 	
 	if(type == cont_type.Weapon):
-		get_parent().weapon = self
+		pass
