@@ -60,7 +60,7 @@ script = ExtResource("4_jh1ax")
 
 [node name="Armor" parent="CharacterSprite/Camera2D/Control" instance=ExtResource("4_sqa0i")]
 position = Vector2(7, 74)
-item = 0
+item = 7
 
 [node name="Weapon" parent="CharacterSprite/Camera2D/Control" instance=ExtResource("4_sqa0i")]
 position = Vector2(7, 62)

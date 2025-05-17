@@ -2,6 +2,9 @@ extends Control
 
 @export var selected_container = 0
 
+var armor
+var weapon
+
 func _init() -> void:
 	pass
 
@@ -18,3 +21,7 @@ func _process(delta: float) -> void:
 			selected_container -= 1
 		else:
 			selected_container = 2
+	
+	get_parent().get_parent()
+	
+	
