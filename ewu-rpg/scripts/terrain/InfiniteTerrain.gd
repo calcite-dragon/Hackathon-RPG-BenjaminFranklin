@@ -10,17 +10,23 @@ extends Node2D
 @export var max_chunks_per_frame: int = 1  # Maximum chunks to generate in a single frame
 
 @export_category("Noise Settings")
-@export var height_noise_scale: float = 0.05
+@export var height_noise_scale: float = 0.04
 @export var height_noise_octaves: int = 4
 @export var height_noise_seed: int = 1234
-@export var temp_noise_scale: float = 0.03
+@export var temp_noise_scale: float = 0.02
 @export var temp_noise_octaves: int = 3
 @export var temp_noise_seed: int = 5678
 
 @export_category("Biome Settings")
 @export var snow_threshold: float = 0.45  # Temperature below this is snow
 @export var mountain_threshold: float = 0.75  # Height above this is mountain (rockier)
+# Height between this is plains
 @export var forest_threshold: float = 0.45  # Height below this is forest (more trees)
+
+@export_category("Temperature-Height Correlation")
+@export var height_temp_influence: float = 0.6  # How much height affects temperature (0-1)
+@export var base_temp_influence: float = 0.4  # How much the base temperature noise matters (0-1)
+@export var height_temp_curve: Curve  # Optional curve to map height->temperature effect
 
 @export_category("Decoration Settings")
 @export var tree_density: float = 0.3  # Higher means more trees
@@ -51,6 +57,19 @@ var SNOW_ROCK_TILE = Vector2i(2, 1)
 func _ready():
 	if player_node_path:
 		_player = get_node(player_node_path)
+	
+	# Create default height-temperature curve if not set
+	if height_temp_curve == null:
+		height_temp_curve = Curve.new()
+		height_temp_curve.add_point(Vector2(0, 1))  # Low elevation = warm
+		height_temp_curve.add_point(Vector2(0.5, 0.5))  # Medium elevation = moderate
+		height_temp_curve.add_point(Vector2(1, 0))  # High elevation = cold
+	
+	# Normalize influence values
+	var total = height_temp_influence + base_temp_influence
+	if total != 0:
+		height_temp_influence /= total
+		base_temp_influence /= total
 	
 	# Setup noise generators
 	_setup_noise()
@@ -184,7 +203,7 @@ func _generate_chunk(chunk_pos: Vector2i):
 			
 			# Get height and temperature values
 			var height = get_height_at(world_x, world_y)
-			var temperature = get_temperature_at(world_x, world_y)
+			var temperature = get_temperature_at(world_x, world_y, height)
 			
 			# Determine base tile type based on temperature
 			var atlas_coords: Vector2i
@@ -196,6 +215,11 @@ func _generate_chunk(chunk_pos: Vector2i):
 			
 			# Set base terrain tile
 			tilemap_layer.set_cell(tile_pos, 0, atlas_coords, 0)
+			
+			# No obstacles for base terrain
+			var tile_data = tilemap_layer.get_cell_tile_data(tile_pos)
+			if tile_data:
+				tile_data.set_custom_data("obstacle", false)
 	
 	# Now place decorations using pre-calculated points
 	for point in decoration_points:
@@ -205,7 +229,7 @@ func _generate_chunk(chunk_pos: Vector2i):
 		
 		# Get height and temperature again for this specific point
 		var height = get_height_at(world_x, world_y)
-		var temperature = get_temperature_at(world_x, world_y)
+		var temperature = get_temperature_at(world_x, world_y, height)
 		
 		# Determine if this should be a tree or rock
 		var rng = RandomNumberGenerator.new()
@@ -216,10 +240,16 @@ func _generate_chunk(chunk_pos: Vector2i):
 		var local_tree_density = tree_density
 		var local_rock_density = rock_density
 		
+		var is_cold = temperature < snow_threshold
+		
 		if height > mountain_threshold:
 			# Rocky terrain: more rocks, fewer trees
-			local_tree_density *= 0.3
+			local_tree_density *= 0.1
 			local_rock_density *= 2.0
+		elif height < mountain_threshold && height > forest_threshold:
+			# Plains terrain: few trees, few rocks
+			local_tree_density *= 0.1
+			local_rock_density *= 0.2
 		elif height < forest_threshold:
 			# Forest terrain: more trees, fewer rocks
 			local_tree_density *= 1.5
@@ -229,13 +259,13 @@ func _generate_chunk(chunk_pos: Vector2i):
 		
 		if random_val < local_tree_density:
 			# Place a tree
-			if temperature < snow_threshold:
+			if is_cold:
 				tile_type = SNOW_TREE_TILE
 			else:
 				tile_type = TREE_TILE
 		elif random_val < local_tree_density + local_rock_density:
 			# Place a rock
-			if temperature < snow_threshold:
+			if is_cold:
 				tile_type = SNOW_ROCK_TILE
 			else:
 				tile_type = ROCK_TILE
@@ -245,6 +275,11 @@ func _generate_chunk(chunk_pos: Vector2i):
 		
 		# Set the decoration tile
 		tilemap_layer.set_cell(tile_pos, 0, tile_type, 0)
+		
+		# Set as obstacle
+		var tile_data = tilemap_layer.get_cell_tile_data(tile_pos)
+		if tile_data:
+			tile_data.set_custom_data("obstacle", true)
 	
 	# Mark chunk as loaded
 	_loaded_chunks[chunk_pos] = true
@@ -368,8 +403,31 @@ func get_height_at(world_x: float, world_y: float) -> float:
 	return (_height_noise.get_noise_2d(rotated_x, rotated_y) + 1) * 0.5
 
 # Get temperature value at a specific world position
-func get_temperature_at(world_x: float, world_y: float) -> float:
+# Now takes height as a parameter to correlate temperature with elevation
+func get_temperature_at(world_x: float, world_y: float, height: float = -1) -> float:
+	# Calculate base temperature from noise
 	var temp_angle = 1.3
 	var temp_rotated_x = world_x * cos(temp_angle) - world_y * sin(temp_angle)
 	var temp_rotated_y = world_x * sin(temp_angle) + world_y * cos(temp_angle)
-	return (_temp_noise.get_noise_2d(temp_rotated_x, temp_rotated_y) + 1) * 0.5
+	var base_temp = (_temp_noise.get_noise_2d(temp_rotated_x, temp_rotated_y) + 1) * 0.5
+	
+	# If height not provided, calculate it
+	if height < 0:
+		height = get_height_at(world_x, world_y)
+	
+	# Calculate height-based temperature modifier
+	# Higher elevation = colder temperature
+	var height_temp_modifier = 0.0
+	
+	if height_temp_curve != null:
+		# Use the curve for more control over the temperature-height relationship
+		height_temp_modifier = 1.0 - height_temp_curve.sample(height)
+	else:
+		# Linear relationship: higher = colder
+		height_temp_modifier = 1.0 - height
+	
+	# Blend base temperature and height-based temperature
+	var final_temp = (base_temp * base_temp_influence) + (height_temp_modifier * height_temp_influence)
+	
+	# Ensure temperature is in 0-1 range
+	return clamp(final_temp, 0.0, 1.0)
