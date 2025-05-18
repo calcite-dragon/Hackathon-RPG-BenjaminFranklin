@@ -9,15 +9,15 @@ extends Node2D
 @export var player_node_path: NodePath
 @export var max_chunks_per_frame: int = 1  # Maximum chunks to generate in a single frame
 
-@export_category("Noise Settings")
-@export var height_noise_scale: float = 0.04
-@export var height_noise_octaves: int = 4
-@export var height_noise_seed: int = 1234
-@export var temp_noise_scale: float = 0.02
-@export var temp_noise_octaves: int = 3
-@export var temp_noise_seed: int = 5678
+@export_category("Biome Size Controls")
+@export var biome_scale: float = 0.03  # Main control for biome size - lower = larger biomes
+@export_range(1, 5) var height_map_detail: int = 3  # Controls small details in height map
+@export_range(1, 5) var temperature_map_detail: int = 2  # Controls small details in temperature map
+@export var height_variation: float = 1.0  # Higher values = more extreme height differences
+@export var temperature_variation: float = 1.0  # Higher values = more extreme temperature differences
+@export var random_seed: int = 0  # Master seed (0 = random)
 
-@export_category("Biome Settings")
+@export_category("Biome Thresholds")
 @export var snow_threshold: float = 0.45  # Temperature below this is snow
 @export var mountain_threshold: float = 0.75  # Height above this is mountain (rockier)
 # Height between this is plains
@@ -45,6 +45,7 @@ var _chunk_queue = []  # Queue of chunks to be generated
 var _chunks_to_remove = []  # Queue of chunks to be removed
 var _is_generating: bool = false
 var _mutex: Mutex
+var _initialized: bool = false
 
 # Tile atlas coordinates based on user's tileset
 var GRASS_TILE = Vector2i(0, 0)
@@ -55,8 +56,9 @@ var SNOW_TREE_TILE = Vector2i(1, 1)
 var SNOW_ROCK_TILE = Vector2i(2, 1)
 
 func _ready():
-	if player_node_path:
-		_player = get_node(player_node_path)
+	# Initialize random seed if not set
+	if random_seed == 0:
+		random_seed = randi()
 	
 	# Create default height-temperature curve if not set
 	if height_temp_curve == null:
@@ -80,6 +82,38 @@ func _ready():
 	# Start background thread for position tracking
 	_thread = Thread.new()
 	_thread.start(_thread_function)
+	
+	# Call to initialize player reference after a short delay
+	# This ensures all nodes are properly ready
+	call_deferred("_initialize_player_and_terrain")
+
+func _initialize_player_and_terrain():
+	# Wait one frame to make sure the player node is fully initialized
+	await get_tree().process_frame
+	
+	if player_node_path:
+		_player = get_node(player_node_path)
+		
+	if _player:
+		# Calculate initial player chunk position
+		var player_pos = _player.world_position
+		_current_player_chunk = Vector2i(
+			floor(float(player_pos.x) / (chunk_size)),
+			floor(float(player_pos.y) / (chunk_size))
+		)
+		
+		# Force generation of initial chunks
+		_update_chunk_queues(_current_player_chunk)
+		
+		# Pre-generate a few chunks immediately for better player experience
+		var initial_chunks_to_generate = min(9, _chunk_queue.size())  # Generate up to 9 chunks immediately
+		
+		for i in range(initial_chunks_to_generate):
+			if _chunk_queue.size() > 0:
+				var chunk_data = _chunk_queue.pop_front()
+				_generate_chunk(chunk_data.pos)
+		
+		_initialized = true
 
 func _exit_tree():
 	_exit_thread = true
@@ -90,21 +124,27 @@ func _setup_noise():
 	# Height noise
 	_height_noise = FastNoiseLite.new()
 	_height_noise.noise_type = FastNoiseLite.TYPE_SIMPLEX
-	_height_noise.seed = height_noise_seed
-	_height_noise.frequency = height_noise_scale
-	_height_noise.fractal_octaves = height_noise_octaves
+	_height_noise.seed = random_seed
+	_height_noise.frequency = biome_scale
+	_height_noise.fractal_octaves = height_map_detail
+	_height_noise.fractal_lacunarity = 2.0
+	_height_noise.fractal_gain = 0.5  # Lower gain = smoother transitions
+	_height_noise.fractal_weighted_strength = 0.3  # Helps with smoother overall shape
 	
-	# Temperature noise
+	# Temperature noise (using a different seed derived from the main seed)
 	_temp_noise = FastNoiseLite.new()
 	_temp_noise.noise_type = FastNoiseLite.TYPE_SIMPLEX
-	_temp_noise.seed = temp_noise_seed
-	_temp_noise.frequency = temp_noise_scale
-	_temp_noise.fractal_octaves = temp_noise_octaves
+	_temp_noise.seed = random_seed + 12345  # Different seed for variation
+	_temp_noise.frequency = biome_scale * 0.7  # Slightly larger temperature regions
+	_temp_noise.fractal_octaves = temperature_map_detail
+	_temp_noise.fractal_lacunarity = 2.0
+	_temp_noise.fractal_gain = 0.4  # Lower gain = more gradual temperature changes
+	_temp_noise.fractal_weighted_strength = 0.2
 
 # Thread for monitoring player position and queueing chunks
 func _thread_function():
 	while not _exit_thread:
-		if _player != null:
+		if _player != null and _initialized:
 			var player_pos = _player.world_position
 			var current_chunk = Vector2i(
 				floor(float(player_pos.x) / (chunk_size)),
@@ -151,6 +191,10 @@ func _update_chunk_queues(center_chunk: Vector2i):
 
 # Process chunk generation/removal on the main thread but limit per frame
 func _process(_delta):
+	# Skip if we haven't finished initializing
+	if not _initialized and _player == null:
+		return
+	
 	# Process chunk removal first (frees up resources)
 	_mutex.lock()
 	var chunks_to_remove = _chunks_to_remove.duplicate()
@@ -215,11 +259,6 @@ func _generate_chunk(chunk_pos: Vector2i):
 			
 			# Set base terrain tile
 			tilemap_layer.set_cell(tile_pos, 0, atlas_coords, 0)
-			
-			# No obstacles for base terrain
-			var tile_data = tilemap_layer.get_cell_tile_data(tile_pos)
-			if tile_data:
-				tile_data.set_custom_data("obstacle", false)
 	
 	# Now place decorations using pre-calculated points
 	for point in decoration_points:
@@ -240,8 +279,6 @@ func _generate_chunk(chunk_pos: Vector2i):
 		var local_tree_density = tree_density
 		var local_rock_density = rock_density
 		
-		var is_cold = temperature < snow_threshold
-		
 		if height > mountain_threshold:
 			# Rocky terrain: more rocks, fewer trees
 			local_tree_density *= 0.1
@@ -259,13 +296,13 @@ func _generate_chunk(chunk_pos: Vector2i):
 		
 		if random_val < local_tree_density:
 			# Place a tree
-			if is_cold:
+			if temperature < snow_threshold:
 				tile_type = SNOW_TREE_TILE
 			else:
 				tile_type = TREE_TILE
 		elif random_val < local_tree_density + local_rock_density:
 			# Place a rock
-			if is_cold:
+			if temperature < snow_threshold:
 				tile_type = SNOW_ROCK_TILE
 			else:
 				tile_type = ROCK_TILE
@@ -275,11 +312,6 @@ func _generate_chunk(chunk_pos: Vector2i):
 		
 		# Set the decoration tile
 		tilemap_layer.set_cell(tile_pos, 0, tile_type, 0)
-		
-		# Set as obstacle
-		var tile_data = tilemap_layer.get_cell_tile_data(tile_pos)
-		if tile_data:
-			tile_data.set_custom_data("obstacle", true)
 	
 	# Mark chunk as loaded
 	_loaded_chunks[chunk_pos] = true
@@ -400,7 +432,10 @@ func get_height_at(world_x: float, world_y: float) -> float:
 	var angle = 0.5
 	var rotated_x = world_x * cos(angle) - world_y * sin(angle)
 	var rotated_y = world_x * sin(angle) + world_y * cos(angle)
-	return (_height_noise.get_noise_2d(rotated_x, rotated_y) + 1) * 0.5
+	
+	# Apply the height variation scaling
+	var height = (_height_noise.get_noise_2d(rotated_x, rotated_y) * height_variation + 1) * 0.5
+	return clamp(height, 0.0, 1.0)  # Ensure height is in 0-1 range
 
 # Get temperature value at a specific world position
 # Now takes height as a parameter to correlate temperature with elevation
@@ -409,7 +444,9 @@ func get_temperature_at(world_x: float, world_y: float, height: float = -1) -> f
 	var temp_angle = 1.3
 	var temp_rotated_x = world_x * cos(temp_angle) - world_y * sin(temp_angle)
 	var temp_rotated_y = world_x * sin(temp_angle) + world_y * cos(temp_angle)
-	var base_temp = (_temp_noise.get_noise_2d(temp_rotated_x, temp_rotated_y) + 1) * 0.5
+	
+	# Apply temperature variation scaling
+	var base_temp = (_temp_noise.get_noise_2d(temp_rotated_x, temp_rotated_y) * temperature_variation + 1) * 0.5
 	
 	# If height not provided, calculate it
 	if height < 0:

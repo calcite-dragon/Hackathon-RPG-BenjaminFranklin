@@ -4,11 +4,11 @@
 [ext_resource type="PackedScene" uid="uid://qr6lsgl7s4ex" path="res://components/player.tscn" id="2_twpsu"]
 [ext_resource type="PackedScene" uid="uid://dtstcgqodrw8o" path="res://components/character_sprite.tscn" id="3_lrqlo"]
 [ext_resource type="Script" uid="uid://dok5q3wh2ooah" path="res://scripts/items/inventory.gd" id="4_jh1ax"]
-[ext_resource type="PackedScene" uid="uid://dv4wukh3afbrw" path="res://components/container.tscn" id="4_sqa0i"]
+[ext_resource type="PackedScene" path="res://components/container.tscn" id="4_sqa0i"]
 [ext_resource type="Script" uid="uid://t7k1nlew15od" path="res://scripts/terrain/InfiniteTerrain.gd" id="5_jh1ax"]
 [ext_resource type="Texture2D" uid="uid://c4a2thg4fohs6" path="res://visual/entity/UI/health2.png" id="6_5sfjl"]
 [ext_resource type="Texture2D" uid="uid://xf30ss152ju8" path="res://visual/entity/UI/health.png" id="7_3hfy5"]
-[ext_resource type="PackedScene" uid="uid://cnhbh6t121t1l" path="res://components/enemy.tscn" id="9_3hfy5"]
+[ext_resource type="PackedScene" path="res://components/enemy.tscn" id="9_3hfy5"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_j5px3"]
 texture = ExtResource("1_j5px3")
@@ -50,17 +50,18 @@ point_count = 5
 [node name="Environment" type="Node2D" parent="."]
 
 [node name="TileMapLayer" type="TileMapLayer" parent="Environment"]
-position = Vector2(-4, -4)
+position = Vector2(-3, -4)
 tile_map_data = PackedByteArray("AAD5//v/AAAAAAAAAAD5//z/AAAAAAAAAAD5//3/AAABAAAAAAD5//7/AAABAAAAAAD5////AAABAAAAAAD5/wAAAAAAAAAAAAD5/wEAAAAAAAAAAAD5/wIAAAAAAAAAAAD5/wMAAAAAAAAAAAD5/wQAAAAAAAAAAAD6//v/AAAAAAAAAAD6//z/AAAAAAAAAAD6//3/AAABAAAAAAD6//7/AAABAAAAAAD6////AAABAAAAAAD6/wAAAAAAAAAAAAD6/wEAAAAAAAAAAAD6/wIAAAAAAAAAAAD6/wMAAAAAAAAAAAD6/wQAAAAAAAAAAAD7//v/AAAAAAAAAAD7//z/AAAAAAAAAAD7//3/AAAAAAAAAAD7//7/AAAAAAAAAAD7////AAAAAAAAAAD7/wAAAAAAAAAAAAD7/wEAAAAAAAAAAAD7/wIAAAAAAAAAAAD7/wMAAAAAAAEAAAD7/wQAAAAAAAAAAAD8//v/AAAAAAAAAAD8//z/AAAAAAAAAAD8//3/AAAAAAAAAAD8//7/AAAAAAEAAAD8////AAAAAAEAAAD8/wAAAAAAAAAAAAD8/wEAAAABAAAAAAD8/wIAAAAAAAAAAAD8/wMAAAAAAAAAAAD8/wQAAAAAAAAAAAD9//v/AAAAAAAAAAD9//z/AAAAAAAAAAD9//3/AAAAAAAAAAD9//7/AAAAAAEAAAD9////AAAAAAAAAAD9/wAAAAAAAAAAAAD9/wEAAAAAAAAAAAD9/wIAAAABAAAAAAD9/wMAAAAAAAAAAAD9/wQAAAAAAAAAAAD+//v/AAAAAAAAAAD+//z/AAAAAAAAAAD+//3/AAAAAAAAAAD+//7/AAAAAAAAAAD+////AAAAAAAAAAD+/wAAAAAAAAAAAAD+/wEAAAAAAAAAAAD+/wIAAAAAAAAAAAD+/wMAAAAAAAAAAAD+/wQAAAAAAAAAAAD///v/AAAAAAAAAAD///z/AAAAAAAAAAD///3/AAAAAAAAAAD///7/AAAAAAAAAAD/////AAAAAAAAAAD//wAAAAAAAAAAAAD//wEAAAAAAAAAAAD//wIAAAAAAAAAAAD//wMAAAAAAAAAAAD//wQAAAAAAAAAAAAAAPv/AAAAAAAAAAAAAPz/AAAAAAAAAAAAAP3/AAAAAAAAAAAAAP7/AAAAAAAAAAAAAP//AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAMAAAAAAAEAAAAAAAQAAAAAAAAAAAABAPv/AAAAAAAAAAABAPz/AAAAAAAAAAABAP3/AAABAAAAAAABAP7/AAAAAAAAAAABAP//AAAAAAAAAAABAAAAAAAAAAAAAAABAAEAAAAAAAEAAAABAAIAAAAAAAAAAAABAAMAAAAAAAEAAAABAAQAAAAAAAAAAAACAPv/AAAAAAAAAAACAPz/AAAAAAAAAAACAP3/AAAAAAAAAAACAP7/AAAAAAAAAAACAP//AAAAAAAAAAACAAAAAAAAAAEAAAACAAEAAAAAAAEAAAACAAIAAAAAAAAAAAACAAMAAAAAAAEAAAACAAQAAAAAAAAAAAADAPv/AAAAAAAAAAADAPz/AAAAAAAAAAADAP3/AAAAAAAAAAADAP7/AAAAAAAAAAADAP//AAAAAAAAAAADAAAAAAAAAAAAAAADAAEAAAAAAAAAAAADAAIAAAAAAAAAAAADAAMAAAAAAAEAAAADAAQAAAAAAAAAAAAEAPv/AAAAAAAAAAAEAPz/AAAAAAAAAAAEAP3/AAAAAAAAAAAEAP7/AAAAAAAAAAAEAP//AAAAAAAAAAAEAAAAAAAAAAAAAAAEAAEAAAAAAAAAAAAEAAIAAAAAAAEAAAAEAAMAAAAAAAEAAAAEAAQAAAAAAAAAAAAFAPv/AAAAAAAAAAAFAPz/AAAAAAAAAAAFAP3/AAAAAAAAAAAFAP7/AAAAAAAAAAAFAP//AAAAAAAAAAAFAAAAAAAAAAAAAAAFAAEAAAAAAAAAAAAFAAIAAAAAAAAAAAAFAAMAAAAAAAAAAAAFAAQAAAAAAAAAAAAGAPv/AAAAAAAAAAAGAPz/AAAAAAAAAAAGAP3/AAAAAAAAAAAGAP7/AAAAAAAAAAAGAP//AAAAAAAAAAAGAAAAAAAAAAAAAAAGAAEAAAAAAAAAAAAGAAIAAAAAAAAAAAAGAAMAAAAAAAAAAAAGAAQAAAAAAAAAAAA=")
 tile_set = SubResource("TileSet_twpsu")
 
 [node name="Player" parent="." instance=ExtResource("2_twpsu")]
+health = 50
 
 [node name="CharacterSprite" parent="." instance=ExtResource("3_lrqlo")]
 script = SubResource("GDScript_jh1ax")
 
 [node name="Camera2D" type="Camera2D" parent="CharacterSprite"]
-zoom = Vector2(8, 8)
+zoom = Vector2(11.25, 11.25)
 
 [node name="Control" type="Control" parent="CharacterSprite/Camera2D"]
 layout_mode = 3
@@ -75,34 +76,34 @@ size_flags_vertical = 4
 script = ExtResource("4_jh1ax")
 
 [node name="Armor" parent="CharacterSprite/Camera2D/Control" instance=ExtResource("4_sqa0i")]
-position = Vector2(7, 74)
-item = 0
+position = Vector2(4, 79)
+item = 6
 
 [node name="Weapon" parent="CharacterSprite/Camera2D/Control" instance=ExtResource("4_sqa0i")]
-position = Vector2(7, 62)
+position = Vector2(4, 67)
 type = 1
 
 [node name="Item1" parent="CharacterSprite/Camera2D/Control" instance=ExtResource("4_sqa0i")]
-position = Vector2(61, 74)
+position = Vector2(61, 81)
 item = 4
 type = 2
 
 [node name="Item2" parent="CharacterSprite/Camera2D/Control" instance=ExtResource("4_sqa0i")]
-position = Vector2(72, 74)
+position = Vector2(72, 81)
 item = 0
 type = 3
 
 [node name="Item3" parent="CharacterSprite/Camera2D/Control" instance=ExtResource("4_sqa0i")]
-position = Vector2(83, 74)
+position = Vector2(83, 81)
 item = 0
 type = 4
 
 [node name="HealthBar" type="TextureProgressBar" parent="CharacterSprite/Camera2D/Control"]
 layout_mode = 0
-offset_left = 2.0
-offset_top = 2.0
-offset_right = 10.0
-offset_bottom = 10.0
+offset_left = -1.0
+offset_top = -6.0
+offset_right = 7.0
+offset_bottom = 2.0
 scale = Vector2(8.48, 0.30694)
 value = 100.0
 texture_under = ExtResource("6_5sfjl")

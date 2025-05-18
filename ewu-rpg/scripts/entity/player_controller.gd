@@ -4,7 +4,7 @@ extends GridMovement
 @export var health: int
 
 func _ready() -> void:
-	health = 100
+	health = 40
 
 func _process(delta: float) -> void:
 	
