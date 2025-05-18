@@ -114,3 +114,5 @@ view_distance = 5
 player_node_path = NodePath("../Player")
 height_temp_curve = SubResource("Curve_5sfjl")
 poisson_radius = 1.5
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="."]
