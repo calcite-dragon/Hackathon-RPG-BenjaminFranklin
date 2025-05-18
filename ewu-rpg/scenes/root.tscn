@@ -1,10 +1,10 @@
-[gd_scene load_steps=12 format=4 uid="uid://df34bt27jl1yf"]
+[gd_scene load_steps=13 format=4 uid="uid://8fakvjd51c7m"]
 
 [ext_resource type="Texture2D" uid="uid://ctcyk2n5fgme6" path="res://visual/main_tiles.png" id="1_j5px3"]
 [ext_resource type="PackedScene" uid="uid://qr6lsgl7s4ex" path="res://components/player.tscn" id="2_twpsu"]
 [ext_resource type="PackedScene" uid="uid://dtstcgqodrw8o" path="res://components/character_sprite.tscn" id="3_lrqlo"]
 [ext_resource type="Script" uid="uid://dok5q3wh2ooah" path="res://scripts/items/inventory.gd" id="4_jh1ax"]
-[ext_resource type="PackedScene" uid="uid://dv4wukh3afbrw" path="res://components/container.tscn" id="4_sqa0i"]
+[ext_resource type="PackedScene" path="res://components/container.tscn" id="4_sqa0i"]
 [ext_resource type="Script" uid="uid://t7k1nlew15od" path="res://scripts/terrain/InfiniteTerrain.gd" id="5_jh1ax"]
 [ext_resource type="Texture2D" uid="uid://c4a2thg4fohs6" path="res://visual/entity/UI/health2.png" id="6_5sfjl"]
 [ext_resource type="Texture2D" uid="uid://xf30ss152ju8" path="res://visual/entity/UI/health.png" id="7_3hfy5"]
@@ -39,6 +39,10 @@ func _physics_process(delta):
 
 	position = position.lerp(follow_pos, delta * FOLLOW_SPEED)
 "
+
+[sub_resource type="Curve" id="Curve_5sfjl"]
+_data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0.247689, 0.500469), 0.0, 0.0, 0, 0, Vector2(0.500924, 0.498438), 0.0, 0.0, 0, 0, Vector2(0.754159, 0.498438), 0.0, 0.0, 0, 0, Vector2(1, 1), 0.0, 0.0, 0, 0]
+point_count = 5
 
 [node name="Root" type="Node2D"]
 
@@ -108,6 +112,7 @@ script = ExtResource("5_jh1ax")
 chunk_size = 16
 view_distance = 5
 player_node_path = NodePath("../Player")
+height_temp_curve = SubResource("Curve_5sfjl")
 poisson_radius = 1.5
 
 [node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="."]
