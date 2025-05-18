@@ -109,3 +109,5 @@ chunk_size = 16
 view_distance = 5
 player_node_path = NodePath("../Player")
 poisson_radius = 1.5
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="."]
