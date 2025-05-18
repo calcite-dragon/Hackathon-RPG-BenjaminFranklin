@@ -1,13 +1,14 @@
-[gd_scene load_steps=13 format=4 uid="uid://8fakvjd51c7m"]
+[gd_scene load_steps=14 format=4 uid="uid://8fakvjd51c7m"]
 
 [ext_resource type="Texture2D" uid="uid://ctcyk2n5fgme6" path="res://visual/main_tiles.png" id="1_j5px3"]
 [ext_resource type="PackedScene" uid="uid://qr6lsgl7s4ex" path="res://components/player.tscn" id="2_twpsu"]
 [ext_resource type="PackedScene" uid="uid://dtstcgqodrw8o" path="res://components/character_sprite.tscn" id="3_lrqlo"]
 [ext_resource type="Script" uid="uid://dok5q3wh2ooah" path="res://scripts/items/inventory.gd" id="4_jh1ax"]
-[ext_resource type="PackedScene" path="res://components/container.tscn" id="4_sqa0i"]
+[ext_resource type="PackedScene" uid="uid://dv4wukh3afbrw" path="res://components/container.tscn" id="4_sqa0i"]
 [ext_resource type="Script" uid="uid://t7k1nlew15od" path="res://scripts/terrain/InfiniteTerrain.gd" id="5_jh1ax"]
 [ext_resource type="Texture2D" uid="uid://c4a2thg4fohs6" path="res://visual/entity/UI/health2.png" id="6_5sfjl"]
 [ext_resource type="Texture2D" uid="uid://xf30ss152ju8" path="res://visual/entity/UI/health.png" id="7_3hfy5"]
+[ext_resource type="PackedScene" uid="uid://cnhbh6t121t1l" path="res://components/enemy.tscn" id="9_3hfy5"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_j5px3"]
 texture = ExtResource("1_j5px3")
@@ -116,3 +117,12 @@ height_temp_curve = SubResource("Curve_5sfjl")
 poisson_radius = 1.5
 
 [node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="."]
+
+[node name="enemy" parent="." instance=ExtResource("9_3hfy5")]
+position = Vector2(16, -9)
+
+[node name="enemy2" parent="." instance=ExtResource("9_3hfy5")]
+position = Vector2(-16, 7)
+
+[node name="enemy3" parent="." instance=ExtResource("9_3hfy5")]
+position = Vector2(-24, -26)
